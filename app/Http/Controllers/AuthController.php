@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +15,7 @@ class AuthController extends Controller
             'nama' => 'required|string|max:255',
             'no_telepon' => 'required|string|max:15|unique:users,no_telepon',
             'password' => 'required|string|min:6|confirmed',
-            'nip' => 'required|string|max:50',
+            'nip' => 'required|string|max:50|unique:users,nip',
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
             'alamat_rumah' => 'nullable|string',
@@ -35,11 +34,11 @@ class AuthController extends Controller
             'unit_kerja' => $request->unit_kerja,
             'sk_perjanjian_kerja' => $request->sk_perjanjian_kerja,
             'role' => 'anggota',
-            'status' => 'menunggu', // Belum diverifikasi
+            'status' => 'pending',
         ]);
 
         return response()->json([
-            'message' => 'Pendaftaran berhasil, menunggu verifikasi pengawas',
+            'message' => 'Pendaftaran berhasil. Menunggu persetujuan pengurus.',
             'user_id' => $user->id,
         ], 201);
     }
@@ -54,11 +53,13 @@ class AuthController extends Controller
         $user = User::where('nip', $request->nip)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'NIP atau password salah'], 401);
+            return response()->json(['message' => 'NIP atau password salah.'], 401);
         }
 
         if ($user->status !== 'aktif') {
-            return response()->json(['message' => 'Akun belum aktif atau masih menunggu persetujuan'], 403);
+            return response()->json([
+                'message' => 'Akun belum aktif. Status Anda saat ini: ' . $user->status
+            ], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -67,6 +68,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => [
+                'id' => $user->id,
                 'nama' => $user->nama,
                 'role' => $user->role,
                 'status' => $user->status,
@@ -79,6 +81,6 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Logout berhasil']);
+        return response()->json(['message' => 'Logout berhasil.']);
     }
 }

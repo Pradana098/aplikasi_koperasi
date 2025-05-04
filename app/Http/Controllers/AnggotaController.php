@@ -17,5 +17,33 @@ class AnggotaController extends Controller
             'message' => 'Selamat datang di dashboard anggota',
         ]);
     }
-}
 
+    public function statusPendaftaranSaya(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Akses ditolak.'
+            ], 403);
+        }
+
+        $message = match ($user->status) {
+            'aktif' => 'Pendaftaran Berhasil Diterima',
+            'ditolak' => 'Pendaftaran Ditolak',
+            'pending' => 'Menunggu Persetujuan',
+            default => 'Status tidak diketahui',
+        };
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $user->id,
+                'nama' => $user->nama,
+                'status' => $user->status,
+                'message' => $message,
+            ]
+        ]);
+    }
+}
