@@ -24,21 +24,21 @@ class AuthController extends Controller
             'unit_kerja' => 'required|string',
             'sk_perjanjian_kerja' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-    
+
         // Simpan file
         $skFile = $request->file('sk_perjanjian_kerja');
         $filename = time() . '_' . Str::random(10) . '.' . $skFile->getClientOriginalExtension();
         $skPath = $skFile->storeAs('sk_perjanjian_kerja', $filename, 'public');
-    
+
         // Simpan user
         $user = User::create([
-            'name' => $request->nama,
+            'nama' => $request->nama, // <-- pastikan field ini ada
             'no_telepon' => $request->no_telepon,
-            'password' => Hash::make($request->password),
+            'password' => bcrypt($request->password),
             'nip' => $request->nip,
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
@@ -46,15 +46,14 @@ class AuthController extends Controller
             'unit_kerja' => $request->unit_kerja,
             'sk_perjanjian_kerja' => $skPath,
             'role' => 'anggota',
-            'status' => 'pending',
+            'status' => 'menunggu',
         ]);
-    
         return response()->json([
             'message' => 'Pendaftaran berhasil. Menunggu persetujuan pengurus.',
             'user' => $user
         ], 201);
     }
-    
+
 
     public function login(Request $request)
     {
