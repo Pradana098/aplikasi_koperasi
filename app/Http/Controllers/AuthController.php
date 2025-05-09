@@ -5,26 +5,38 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:255',
-            'no_telepon' => 'required|string|max:15|unique:users,no_telepon',
+            'no_telepon' => 'required|string|max:20|unique:users,no_telepon',
             'password' => 'required|string|min:6|confirmed',
-            'nip' => 'required|string|max:50|unique:users,nip',
-            'tempat_lahir' => 'nullable|string|max:100',
-            'tanggal_lahir' => 'nullable|date',
-            'alamat_rumah' => 'nullable|string',
-            'unit_kerja' => 'nullable|string',
-            'sk_perjanjian_kerja' => 'nullable|string',
+            'nip' => 'required|string',
+            'tempat_lahir' => 'required|string',
+            'tanggal_lahir' => 'required|date',
+            'alamat_rumah' => 'required|string',
+            'unit_kerja' => 'required|string',
+            'sk_perjanjian_kerja' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
-
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        // Simpan file
+        $skFile = $request->file('sk_perjanjian_kerja');
+        $filename = time() . '_' . Str::random(10) . '.' . $skFile->getClientOriginalExtension();
+        $skPath = $skFile->storeAs('sk_perjanjian_kerja', $filename, 'public');
+    
+        // Simpan user
         $user = User::create([
-            'nama' => $request->nama,
+            'name' => $request->nama,
             'no_telepon' => $request->no_telepon,
             'password' => Hash::make($request->password),
             'nip' => $request->nip,
@@ -32,16 +44,17 @@ class AuthController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'alamat_rumah' => $request->alamat_rumah,
             'unit_kerja' => $request->unit_kerja,
-            'sk_perjanjian_kerja' => $request->sk_perjanjian_kerja,
+            'sk_perjanjian_kerja' => $skPath,
             'role' => 'anggota',
             'status' => 'pending',
         ]);
-
+    
         return response()->json([
             'message' => 'Pendaftaran berhasil. Menunggu persetujuan pengurus.',
-            'user_id' => $user->id,
+            'user' => $user
         ], 201);
     }
+    
 
     public function login(Request $request)
     {
