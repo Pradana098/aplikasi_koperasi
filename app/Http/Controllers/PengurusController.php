@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str;
+use App\Notifications\NotifikasiHelper;
 
 class PengurusController extends Controller
 {
@@ -23,8 +25,8 @@ class PengurusController extends Controller
     public function listPendingAnggota()
     {
         $anggota = User::where('role', 'anggota')
-                        ->where('status', 'pending')
-                        ->get();
+            ->where('status', 'pending')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -108,5 +110,34 @@ class PengurusController extends Controller
                 'message' => 'Anggota tidak ditemukan.'
             ], 404);
         }
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'nip' => 'required|unique:users,nip',
+            'telepon' => 'required|string',
+        ]);
+
+
+        $token = Str::uuid();
+
+        $user = User::create([
+            'nama' => $validated['nama'],
+            'email' => $validated['email'],
+            'nip' => $validated['nip'],
+            'telepon' => $validated['telepon'],
+            'role' => 'anggota',
+            'status' => 'aktif',
+            'password_token' => $token,
+            'password' => null,
+        ]);
+
+
+        NotifikasiHelper::kirimLinkPassword($user->telepon, $token);
+
+        return response()->json(['message' => 'Anggota berhasil ditambahkan dan notifikasi dikirim.'], 201);
     }
 }

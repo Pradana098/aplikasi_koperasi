@@ -95,6 +95,22 @@ class AuthController extends Controller
     ]);
 }
 
+public function submitPassword(Request $request, $token)
+{
+    $user = User::where('password_token', $token)->firstOrFail();
+
+    $request->validate([
+        'password' => 'required|min:6|confirmed',
+    ]);
+
+    $user->update([
+        'password' => bcrypt($request->password),
+        'password_token' => null,
+    ]);
+
+    return response()->json(['message' => 'Password berhasil dibuat']);
+}
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
