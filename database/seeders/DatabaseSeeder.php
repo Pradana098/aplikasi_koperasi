@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'nama' => 'Siti Pengawas',
-            'nip' => '1234567890',
+            'nip' => '1234567891',
             'no_telepon' => '089876543210',
             'password' => Hash::make('pengawas123'),
             'role' => 'pengawas',

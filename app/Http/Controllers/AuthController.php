@@ -56,38 +56,44 @@ class AuthController extends Controller
 
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'nip' => 'required|string',
-            'password' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'nip' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        $user = User::where('nip', $request->nip)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'NIP atau password salah.'], 401);
-        }
+    $user = User::where('nip', $request->nip)->first();
 
-        if ($user->status !== 'aktif') {
-            return response()->json([
-                'message' => 'Akun belum aktif. Status Anda saat ini: ' . $user->status
-            ], 403);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'nama' => $user->nama,
-                'role' => $user->role,
-                'status' => $user->status,
-                'nip' => $user->nip,
-            ]
-        ]);
+    if (!$user) {
+        return response()->json(['message' => 'NIP tidak ditemukan.'], 404);
     }
+
+    if (!Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Password salah.'], 401);
+    }
+
+    if ($user->status !== 'aktif') {
+        return response()->json([
+            'message' => 'Akun belum aktif.',
+            'status_user' => $user->status,
+        ], 403);
+    }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'user' => [
+            'id' => $user->id,
+            'nama' => $user->nama,
+            'role' => $user->role,
+            'status' => $user->status,
+            'nip' => $user->nip,
+        ]
+    ]);
+}
 
     public function logout(Request $request)
     {
