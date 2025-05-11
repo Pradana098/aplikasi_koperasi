@@ -22,19 +22,13 @@ class AuthController extends Controller
             'tanggal_lahir' => 'required|date',
             'alamat_rumah' => 'required|string',
             'unit_kerja' => 'required|string',
-            'sk_perjanjian_kerja' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Simpan file
-        $skFile = $request->file('sk_perjanjian_kerja');
-        $filename = time() . '_' . Str::random(10) . '.' . $skFile->getClientOriginalExtension();
-        $skPath = $skFile->storeAs('sk_perjanjian_kerja', $filename, 'public');
 
-        // Simpan user
         $user = User::create([
             'nama' => $request->nama, // <-- pastikan field ini ada
             'no_telepon' => $request->no_telepon,
@@ -44,7 +38,6 @@ class AuthController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'alamat_rumah' => $request->alamat_rumah,
             'unit_kerja' => $request->unit_kerja,
-            'sk_perjanjian_kerja' => $skPath,
             'role' => 'anggota',
             'status' => 'menunggu',
         ]);
@@ -117,4 +110,32 @@ public function submitPassword(Request $request, $token)
 
         return response()->json(['message' => 'Logout berhasil.']);
     }
+
+    public function uploadSK(Request $request)
+{
+    $request->validate([
+        'file_sk' => 'required|mimes:pdf|max:2048',
+    ]);
+
+    if ($request->hasFile('file_sk')) {
+        $file = $request->file('file_sk');
+        $path = $file->store('sk_kerja', 'public');
+
+        // Jika ada user yang login saat ini, simpan ke database
+        // Atau kamu bisa simpan langsung ke data calon anggota
+        $user = auth()->user(); // atau manual dari frontend
+
+        if ($user) {
+            $user->file_sk = $path;
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => 'File berhasil diunggah',
+            'file_path' => $path
+        ]);
+    }
+
+    return response()->json(['message' => 'Tidak ada file yang diunggah'], 400);
+}
 }

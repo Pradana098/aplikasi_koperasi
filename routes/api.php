@@ -21,6 +21,22 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
 Route::post('/buat-password/{token}', [AuthController::class, 'submitPassword']);
+Route::get('/sk-file/{id}', [AuthController::class, 'getSKFile']);
+
+Route::post('/calon-anggota/status', function (Request $request) {
+    $anggota = \App\Models\CalonAnggota::where('nik', $request->nik)->first();
+
+    if (!$anggota) {
+        return response()->json(['message' => 'Data tidak ditemukan'], 404);
+    }
+
+    return response()->json([
+        'status' => $anggota->status,
+        'nama' => $anggota->nama,
+        'dokumen' => $anggota->dokumen_sk ? 'Uploaded' : 'Belum Upload',
+    ]);
+});
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
