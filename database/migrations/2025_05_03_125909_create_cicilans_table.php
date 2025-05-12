@@ -14,7 +14,6 @@ return new class extends Migration
     public function up()
     {
         Schema::create('cicilan', function (Blueprint $table) {
-            $table->engine = 'InnoDB'; // Menentukan engine InnoDB
             $table->id();
             $table->unsignedBigInteger('pinjaman_id');
             $table->foreign('pinjaman_id')->references('id')->on('pinjaman')->onDelete('cascade');

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('jumlah_pinjaman', 15, 2);
-            $table->integer('tenor'); // jumlah bulan, max 10
-            $table->decimal('bunga', 5, 2); // dalam persen
+            $table->integer('tenor');
+            $table->decimal('bunga', 5, 2);
             $table->date('tanggal_pengajuan');
             $table->enum('status', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
             $table->timestamps();

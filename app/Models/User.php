@@ -28,6 +28,7 @@ class User extends Authenticatable implements CanResetPassword
         'sk_perjanjian_kerja',
         'role',
         'status',
+        'photo_path'
     ];
 
     /**
@@ -39,21 +40,11 @@ class User extends Authenticatable implements CanResetPassword
     ];
 
     /**
-     * Role checkers.
+     * Get the role of the user.
      */
-    public function isPengawas()
+    public function isRole($role)
     {
-        return $this->role === 'pengawas';
-    }
-
-    public function isPengurus()
-    {
-        return $this->role === 'pengurus';
-    }
-
-    public function isAnggota()
-    {
-        return $this->role === 'anggota';
+        return $this->role === $role;
     }
 
     /**
@@ -62,5 +53,21 @@ class User extends Authenticatable implements CanResetPassword
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new \App\Notifications\ResetPasswordCustom($token));
+    }
+
+    /**
+     * Relasi ke tabel Simpanan
+     */
+    public function simpanans()
+    {
+        return $this->hasMany(Simpanan::class);
+    }
+
+    /**
+     * Relasi ke tabel Pinjaman
+     */
+    public function pinjaman()
+    {
+        return $this->hasMany(Pinjaman::class);
     }
 }

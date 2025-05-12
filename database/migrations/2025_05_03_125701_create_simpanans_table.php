@@ -16,13 +16,13 @@ return new class extends Migration
         Schema::create('simpanan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            // Tentukan nama tabel yang benar untuk foreign key
             $table->foreignId('jenis_simpanan_id')->constrained('jenis_simpanan')->onDelete('cascade');
             $table->decimal('jumlah', 15, 2);
             $table->date('tanggal');
             $table->string('keterangan')->nullable();
             $table->timestamps();
         });
+        
         
         
     }
