@@ -22,17 +22,11 @@ class PengurusController extends Controller
         ]);
     }
 
-    public function listPendingAnggota()
+   public function PendingAnggota()
     {
-        $anggota = User::where('role', 'anggota')
-            ->where('status', 'pending')
-            ->get();
-
-        return response()->json([
-            'status' => true,
-            'data' => $anggota
-        ]);
+        return response()->json(['message' => 'Berhasil ambil anggota pending']);
     }
+
 
     public function approveAnggota($id)
     {
@@ -83,61 +77,7 @@ class PengurusController extends Controller
         ]);
     }
 
-    public function detailStatusPendaftaran($id)
-    {
-        try {
-            $anggota = User::where('id', $id)->where('role', 'anggota')->firstOrFail();
-
-            $message = match ($anggota->status) {
-                'aktif' => 'Pendaftaran Berhasil Diterima',
-                'ditolak' => 'Pendaftaran Ditolak',
-                'pending' => 'Menunggu Persetujuan',
-                default => 'Status tidak diketahui',
-            };
-
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    'id' => $anggota->id,
-                    'nama' => $anggota->nama,
-                    'status' => $anggota->status,
-                    'message' => $message,
-                ]
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Anggota tidak ditemukan.'
-            ], 404);
-        }
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'nip' => 'required|unique:users,nip',
-            'telepon' => 'required|string',
-        ]);
-
-
-        $token = Str::uuid();
-
-        $user = User::create([
-            'nama' => $validated['nama'],
-            'email' => $validated['email'],
-            'nip' => $validated['nip'],
-            'telepon' => $validated['telepon'],
-            'role' => 'anggota',
-            'status' => 'aktif',
-            'password_token' => $token,
-            'password' => null,
-        ]);
-
-
-        NotifikasiHelper::kirimLinkPassword($user->telepon, $token);
-
-        return response()->json(['message' => 'Anggota berhasil ditambahkan dan notifikasi dikirim.'], 201);
-    }
+   
+  
+  
 }

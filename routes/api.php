@@ -23,20 +23,8 @@ Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'
 Route::post('/buat-password/{token}', [AuthController::class, 'submitPassword']);
 Route::get('/sk-file/{id}', [AuthController::class, 'getSKFile']);
 
-Route::post('/calon-anggota/status', function (Request $request) {
-    $anggota = \App\Models\CalonAnggota::where('nik', $request->nik)->first();
 
-    if (!$anggota) {
-        return response()->json(['message' => 'Data tidak ditemukan'], 404);
-    }
-
-    return response()->json([
-        'status' => $anggota->status,
-        'nama' => $anggota->nama,
-        'dokumen' => $anggota->dokumen_sk ? 'Uploaded' : 'Belum Upload',
-    ]);
-});
-
+Route::get('/anggota/pending', [PengurusController::class, 'PendingAnggota']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -49,7 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route untuk role pengurus
     Route::middleware('role:pengurus')->group(function () {
         Route::get('/dashboard/pengurus', [PengurusController::class, 'index']);
-        Route::get('/anggota/pending', [PengurusController::class, 'listPendingAnggota']);
+        // Route::get('/anggota/pending', [PengurusController::class, 'listPendingAnggota']);
         Route::post('/anggota/{id}/approve', [PengurusController::class, 'approveAnggota']);
         Route::post('/anggota/{id}/reject', [PengurusController::class, 'rejectAnggota']);
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
