@@ -23,21 +23,13 @@ class PengurusController extends Controller
     }
 
 
-public function listPending()
-{
-    $pendingAnggota = User::where('role', 'anggota')
-                          ->where('status', 'menunggu')
-                          ->get();
+    public function listPendingAnggota()
+    {
+        $anggota = User::where('role', 'anggota')->where('status', 'pending')->get();
+        return response()->json($anggota);
+    }
 
-    return response()->json([
-        'message' => 'Daftar anggota pending berhasil diambil',
-        'data' => $pendingAnggota
-    ]);
-}
-
-
-
-     public function verifikasi(Request $request, $id)
+    public function verifikasi(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:aktif,ditolak',
@@ -55,7 +47,20 @@ public function listPending()
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
-  
+     public function listAnggotaAktif()
+    {
+        $anggota = User::where('role', 'anggota')->where('status', 'aktif')->get();
+        return response()->json($anggota);
+    }
+
+     public function listAnggotaDitolak()
+    {
+        $anggota = User::where('role', 'anggota')->where('status', 'ditolak')->get();
+        return response()->json($anggota);
+    }
+
+
+
     public function jumlahAnggota()
     {
         $jumlah = User::where('role', 'anggota')->count();
