@@ -22,52 +22,40 @@ class PengurusController extends Controller
         ]);
     }
 
-   public function PendingAnggota()
+
+public function listPending()
+{
+    $pendingAnggota = User::where('role', 'anggota')
+                          ->where('status', 'menunggu')
+                          ->get();
+
+    return response()->json([
+        'message' => 'Daftar anggota pending berhasil diambil',
+        'data' => $pendingAnggota
+    ]);
+}
+
+
+
+     public function verifikasi(Request $request, $id)
     {
-        return response()->json(['message' => 'Berhasil ambil anggota pending']);
-    }
+        $request->validate([
+            'status' => 'required|in:aktif,ditolak',
+        ]);
 
+        $anggota = User::find($id);
 
-    public function approveAnggota($id)
-    {
-        try {
-            $anggota = User::where('id', $id)->where('role', 'anggota')->firstOrFail();
-            $anggota->status = 'aktif';
-            $anggota->save();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Anggota berhasil disetujui.',
-                'data' => $anggota
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Anggota tidak ditemukan.'
-            ], 404);
+        if (!$anggota || $anggota->role !== 'anggota') {
+            return response()->json(['error' => 'Anggota tidak ditemukan'], 404);
         }
+
+        $anggota->status = $request->status;
+        $anggota->save();
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
-    public function rejectAnggota($id)
-    {
-        try {
-            $anggota = User::where('id', $id)->where('role', 'anggota')->firstOrFail();
-            $anggota->status = 'ditolak';
-            $anggota->save();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Anggota berhasil ditolak.',
-                'data' => $anggota
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Anggota tidak ditemukan.'
-            ], 404);
-        }
-    }
-
+  
     public function jumlahAnggota()
     {
         $jumlah = User::where('role', 'anggota')->count();
@@ -77,7 +65,7 @@ class PengurusController extends Controller
         ]);
     }
 
-   
-  
-  
+
+
+
 }

@@ -7,46 +7,43 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'nama' => 'required|string|max:255',
-            'no_telepon' => 'required|string|max:20|unique:users,no_telepon',
-            'password' => 'required|string|min:6|confirmed',
-            'nip' => 'required|string',
-            'tempat_lahir' => 'required|string',
+            'nip' => 'required|string|max:50|unique:users,nip',
+            'tempat_lahir' => 'required|string|max:100',
             'tanggal_lahir' => 'required|date',
-            'alamat_rumah' => 'required|string',
-            'unit_kerja' => 'required|string',
+            'alamat' => 'required|string',
+            'nomor_hp' => 'required|string|max:20',
+            'unit_kerja' => 'required|string|max:100',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-
         $user = User::create([
-            'nama' => $request->nama, // <-- pastikan field ini ada
-            'no_telepon' => $request->no_telepon,
-            'password' => bcrypt($request->password),
+            'nama' => $request->nama,
             'nip' => $request->nip,
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
-            'alamat_rumah' => $request->alamat_rumah,
+            'alamat' => $request->alamat,
+            'nomor_hp' => $request->nomor_hp,
             'unit_kerja' => $request->unit_kerja,
+            'password' => Hash::make($request->password),
             'role' => 'anggota',
-            'status' => 'menunggu',
+            'status' => 'menunggu', // default belum disetujui
+            'sk_perjanjian_kerja' => null,     // belum ada dokumen
         ]);
+
         return response()->json([
             'message' => 'Pendaftaran berhasil. Menunggu persetujuan pengurus.',
             'user' => $user
         ], 201);
     }
-
 
     public function login(Request $request)
 {
@@ -114,28 +111,36 @@ public function submitPassword(Request $request, $token)
     public function uploadSK(Request $request)
 {
     $request->validate([
-        'file_sk' => 'required|mimes:pdf|max:2048',
-    ]);
+            'nip' => 'required|exists:users,nip',
+            'sk_perjanjian_kerja' => 'required|mimes:pdf|max:2048',
+        ]);
 
-    if ($request->hasFile('file_sk')) {
-        $file = $request->file('file_sk');
-        $path = $file->store('sk_kerja', 'public');
+        $user = User::where('nip', $request->nip)->first();
 
-        // Jika ada user yang login saat ini, simpan ke database
-        // Atau kamu bisa simpan langsung ke data calon anggota
-        $user = auth()->user(); // atau manual dari frontend
+        if ($user->dokumen) {
+            Storage::delete('public/sk/' . $user->dokumen);
+        }
 
-        if ($user) {
-            $user->file_sk = $path;
-            $user->save();
+        $filename = uniqid() . '.' . $request->file->extension();
+        $request->file->storeAs('public/sk', $filename);
+
+        $user->update(['sk_perjanjian_kerja' => $filename]);
+
+        return response()->json(['message' => 'Upload berhasil'], 200);
+    }
+
+     public function status($nip)
+    {
+        $user = User::where('nip', $nip)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User tidak ditemukan'], 404);
         }
 
         return response()->json([
-            'message' => 'File berhasil diunggah',
-            'file_path' => $path
+            'nama' => $user->nama,
+            'status' => $user->status,
+            'sk_perjanjian_kerja' => $user->dokumen ? 'Sudah Diupload' : 'Belum Diupload',
         ]);
     }
-
-    return response()->json(['message' => 'Tidak ada file yang diunggah'], 400);
-}
 }

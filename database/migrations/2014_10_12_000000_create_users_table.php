@@ -26,7 +26,7 @@ return new class extends Migration
         $table->string('sk_perjanjian_kerja')->nullable();
         $table->string('photo_path')->nullable();
         $table->enum('role', ['anggota', 'pengawas', 'pengurus'])->default('anggota');
-        $table->enum('status', ['menunggu', 'aktif', 'ditolak'])->default('menunggu');
+        $table->enum('status', ['pending', 'aktif', 'ditolak'])->default('pending');
         $table->rememberToken();
         $table->timestamps();
     });

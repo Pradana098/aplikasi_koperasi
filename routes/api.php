@@ -24,8 +24,6 @@ Route::post('/buat-password/{token}', [AuthController::class, 'submitPassword'])
 Route::get('/sk-file/{id}', [AuthController::class, 'getSKFile']);
 
 
-Route::get('/anggota/pending', [PengurusController::class, 'PendingAnggota']);
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -37,11 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route untuk role pengurus
     Route::middleware('role:pengurus')->group(function () {
         Route::get('/dashboard/pengurus', [PengurusController::class, 'index']);
-        // Route::get('/anggota/pending', [PengurusController::class, 'listPendingAnggota']);
-        Route::post('/anggota/{id}/approve', [PengurusController::class, 'approveAnggota']);
-        Route::post('/anggota/{id}/reject', [PengurusController::class, 'rejectAnggota']);
+        Route::get('/pending', [PengurusController::class, 'listPending']);
+        Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
+
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
-        Route::get('/anggota/{id}/status', [PengurusController::class, 'detailStatusPendaftaran']);
     });
 
     // Route untuk role anggota
