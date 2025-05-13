@@ -29,8 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:pengurus')->group(function () {
         Route::get('/dashboard/pengurus', [PengurusController::class, 'index']);
         Route::get('/pending', [PengurusController::class, 'listPendingAnggota']);
-        Route::get('/anggota/aktif',[PengurusController::class, 'listAnggotaAktif']);
-        Route::get('anggota/ditolak', [PengurusController::class,'listAnggotaDitolak']);
+        Route::get('/anggota/aktif', [PengurusController::class, 'listAnggotaAktif']);
+        Route::get('anggota/ditolak', [PengurusController::class, 'listAnggotaDitolak']);
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
 
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
