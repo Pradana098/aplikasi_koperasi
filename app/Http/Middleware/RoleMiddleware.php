@@ -10,12 +10,28 @@ class RoleMiddleware
 {
   public function handle($request, Closure $next, $role)
 {
-   if (Auth::check() && Auth::user()->role === $role) {
-            return $next($request);
+     $user = Auth::user();
+
+        if (!$user || $user->role !== $role) {
+            return response()->json(['message' => 'Unauthorized (Role)'], 403);
         }
 
-        // If the user does not have the required role, return an unauthorized response
-        return response()->json(['message' => 'Unauthorized'], 403);
+         if ($role === 'anggota') {
+            $simpananPokokId = 1;
+
+            $sudahBayarPokok = $user->simpanan()
+                ->where('jenis_simpanan_id', $simpananPokokId)
+                ->exists();
+
+            if (!$sudahBayarPokok) {
+                return response()->json([
+                    'message' => 'Silakan lakukan pembayaran simpanan pokok terlebih dahulu.',
+                    'status' => 'require_simpanan_pokok'
+                ], 403);
+            }
+        }
+
+        return $next($request);
+    }
 }
 
-}
