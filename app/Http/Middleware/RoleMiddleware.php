@@ -8,21 +8,19 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-  public function handle($request, Closure $next, $role)
-{
-     $user = Auth::user();
+    public function handle($request, Closure $next, $role)
+    {
+        $user = Auth::user();
 
         if (!$user || $user->role !== $role) {
             return response()->json(['message' => 'Unauthorized (Role)'], 403);
         }
-
-         if ($role === 'anggota') {
-            $simpananPokokId = 1;
-
+        if ($role === 'anggota') {
+            // Cek apakah sudah bayar simpanan pokok
             $sudahBayarPokok = $user->simpanan()
-                ->where('jenis_simpanan_id', $simpananPokokId)
+                ->where('jenis', 'pokok')
                 ->exists();
-
+                
             if (!$sudahBayarPokok) {
                 return response()->json([
                     'message' => 'Silakan lakukan pembayaran simpanan pokok terlebih dahulu.',

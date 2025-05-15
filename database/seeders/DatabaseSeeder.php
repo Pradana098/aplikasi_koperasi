@@ -6,6 +6,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Simpanan;
+use App\Models\JenisSimpanan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -43,6 +45,42 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('anggota123'),
             'role' => 'anggota',
             'status' => 'aktif',
+        ]);
+
+           User::create([
+            'nama' => 'pani Anggota',
+            'nip' => '0987654322',
+            'no_telepon' => '089876543213',
+            'password' => Hash::make('anggota123'),
+            'role' => 'anggota',
+            'status' => 'pending',
+        ]);
+
+   User::create([
+            'nama' => 'ali Anggota',
+            'nip' => '0987654323',
+            'no_telepon' => '089876543214',
+            'password' => Hash::make('anggota123'),
+            'role' => 'anggota',
+            'status' => 'ditolak',
+        ]);
+
+           User::create([
+            'nama' => 'alan Anggota',
+            'nip' => '0987654324',
+            'no_telepon' => '089876543215',
+            'password' => Hash::make('anggota123'),
+            'role' => 'anggota',
+            'status' => 'aktif',
+        ]);
+
+          $user = User::where('nama', 'Ani Anggota')->first();
+
+          Simpanan::create([
+            'user_id' => $user->id,
+            'jenis' => 'pokok', 
+            'jumlah' => 100000, 
+            'tanggal' => now(),
         ]);
 
     }
