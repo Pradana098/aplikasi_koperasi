@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\Anggota;
 use Illuminate\Support\Str;
 use App\Notifications\NotifikasiHelper;
+use Illuminate\Support\Facades\Log;
 
 class PengurusController extends Controller
 {
@@ -23,10 +25,37 @@ class PengurusController extends Controller
     }
 
 
-    public function listPendingAnggota()
+    public function getAnggotaByStatus($status)
     {
-        $anggota = User::where('role', 'anggota')->where('status', 'pending')->get();
-        return response()->json($anggota);
+        try {
+            // Validasi status yang diterima
+            if (!in_array($status, ['pending', 'aktif', 'ditolak'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Status tidak valid. Status harus berupa: pending, aktif, atau ditolak'
+                ], 400);
+            }
+
+            // Ambil data anggota berdasarkan status
+            $anggota = User::where('role', 'anggota')
+                        ->where('status', $status)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data anggota berhasil diambil',
+                'data' => $anggota
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error mengambil data anggota: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat mengambil data anggota',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function verifikasi(Request $request, $id)
@@ -46,19 +75,6 @@ class PengurusController extends Controller
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
-
-     public function listAnggotaAktif()
-    {
-        $anggota = User::where('role', 'anggota')->where('status', 'aktif')->get();
-        return response()->json($anggota);
-    }
-
-     public function listAnggotaDitolak()
-    {
-        $anggota = User::where('role', 'anggota')->where('status', 'ditolak')->get();
-        return response()->json($anggota);
-    }
-
 
 
     public function jumlahAnggota()

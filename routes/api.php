@@ -27,18 +27,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route untuk role pengurus
     Route::middleware('role:pengurus')->group(function () {
         Route::get('/dashboard/pengurus', [PengurusController::class, 'index']);
-        Route::get('/pending', [PengurusController::class, 'listPendingAnggota']);
-        Route::get('/anggota/aktif', [PengurusController::class, 'listAnggotaAktif']);
-        Route::get('anggota/ditolak', [PengurusController::class, 'listAnggotaDitolak']);
+        Route::get('/status/{status}', [PengurusController::class, 'getAnggotaByStatus']);
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
-
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
     });
+
 
     // Route untuk role anggota
     Route::middleware('role:anggota')->group(function () {
         Route::get('/dashboard/anggota', [AnggotaController::class, 'index']);
         Route::get('/anggota/status', [AnggotaController::class, 'statusPendaftaranSaya']);
-        
+
     });
 });
