@@ -9,6 +9,9 @@ use App\Models\Anggota;
 use Illuminate\Support\Str;
 use App\Notifications\NotifikasiHelper;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\Simpanan;
+use Carbon\Carbon;
 
 class PengurusController extends Controller
 {
@@ -28,7 +31,6 @@ class PengurusController extends Controller
     public function getAnggotaByStatus($status)
     {
         try {
-            // Validasi status yang diterima
             if (!in_array($status, ['pending', 'aktif', 'ditolak'])) {
                 return response()->json([
                     'status' => 'error',
@@ -36,7 +38,6 @@ class PengurusController extends Controller
                 ], 400);
             }
 
-            // Ambil data anggota berdasarkan status
             $anggota = User::where('role', 'anggota')
                         ->where('status', $status)
                         ->orderBy('created_at', 'desc')
@@ -58,25 +59,50 @@ class PengurusController extends Controller
         }
     }
 
-    public function verifikasi(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:aktif,ditolak',
-        ]);
+ public function verifikasi(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:aktif,ditolak',
+    ]);
 
-        $anggota = User::find($id);
+    $anggota = User::find($id);
 
-        if (!$anggota || $anggota->role !== 'anggota') {
-            return response()->json(['error' => 'Anggota tidak ditemukan'], 404);
-        }
+    if (!$anggota || $anggota->role !== 'anggota') {
+        return response()->json(['error' => 'Anggota tidak ditemukan'], 404);
+    }
 
+    DB::beginTransaction();
+    try {
         $anggota->status = $request->status;
         $anggota->save();
 
+        // Jika status disetujui (aktif), lakukan pemotongan gaji untuk simpanan pokok
+        if ($request->status === 'aktif') {
+            $jumlahSimpananPokok = 100000;
+
+            if ($anggota->gaji < $jumlahSimpananPokok) {
+                throw new \Exception('Gaji anggota tidak mencukupi untuk simpanan pokok.');
+            }
+
+
+            // Simpan data ke tabel simpanan
+            Simpanan::create([
+                'user_id' => $anggota->id,
+                'jenis' => 'pokok',
+                'jumlah' => $jumlahSimpananPokok,
+                'tanggal' => Carbon::now(),
+                'keterangan' => 'Pemotongan otomatis dari gaji saat disetujui'
+            ]);
+        }
+
+        DB::commit();
+
         return response()->json(['message' => 'Status berhasil diperbarui']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => 'Gagal memverifikasi: ' . $e->getMessage()], 500);
     }
-
-
+}
     public function jumlahAnggota()
     {
         $jumlah = User::where('role', 'anggota')->count();

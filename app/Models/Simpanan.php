@@ -17,4 +17,11 @@ class Simpanan extends Model
     {
         return $this->belongsTo(\App\Models\JenisSimpanan::class, 'jenis_simpanan_id');
     }
+      protected $fillable = [
+        'user_id',
+        'jenis',
+        'jumlah',
+        'tanggal',
+        'keterangan',
+    ];
 }
