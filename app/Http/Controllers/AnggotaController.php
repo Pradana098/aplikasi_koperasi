@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
+use App\Models\Simpanan;
 
 class AnggotaController extends Controller
 {
@@ -46,4 +48,26 @@ class AnggotaController extends Controller
             ]
         ]);
     }
+
+    public function riwayatWajib(Request $request)
+{
+    $user = $request->user(); 
+
+    if ($user->role !== 'anggota') {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Hanya anggota yang dapat melihat riwayat simpanan wajib.'
+        ], 403);
+    }
+
+    $riwayat = Simpanan::where('user_id', $user->id)
+        ->where('jenis', 'wajib')
+        ->orderBy('tanggal', 'desc')
+        ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $riwayat
+    ]);
+}
 }

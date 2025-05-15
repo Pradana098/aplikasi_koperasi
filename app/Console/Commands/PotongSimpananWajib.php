@@ -2,50 +2,52 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\User;
 use App\Models\Simpanan;
+use App\Models\User;
+use App\Models\Notifikasi;
 use Carbon\Carbon;
 
 class PotongSimpananWajib extends Command
 {
     protected $signature = 'simpanan:potong-wajib';
-    protected $description = 'Memotong simpanan wajib Rp100.000 untuk setiap anggota aktif setiap bulan';
+    protected $description = 'Memotong simpanan wajib anggota setiap bulan';
 
     public function handle()
     {
-        $tanggal = Carbon::now()->startOfMonth(); // Tanggal 1 bulan ini
-        $jumlahSimpanan = 100000;
-
-        $anggotaAktif = User::where('role', 'anggota')->where('status', 'aktif')->get();
+        $anggota = User::where('role', 'anggota')->get();
+        $tanggal = Carbon::now()->startOfMonth();
+        $jumlahPotongan = 100000;
 
         $berhasil = 0;
-        $gagal = 0;
+        $dilewati = 0;
 
-        foreach ($anggotaAktif as $anggota) {
-            $sudahAda = Simpanan::where('user_id', $anggota->id)
-                ->where('jenis', 'wajib')
-                ->whereMonth('tanggal', $tanggal->month)
-                ->whereYear('tanggal', $tanggal->year)
+        foreach ($anggota as $user) {
+            $punyaPokok = Simpanan::where('user_id', $user->id)
+                ->where('jenis', 'pokok')
                 ->exists();
 
-            if ($sudahAda) {
-                $this->info("Simpanan wajib untuk {$anggota->name} sudah ada.");
-                $gagal++;
+            if (!$punyaPokok) {
+                $dilewati++;
                 continue;
             }
 
             Simpanan::create([
-                'user_id' => $anggota->id,
+                'user_id' => $user->id,
                 'jenis' => 'wajib',
-                'jumlah' => $jumlahSimpanan,
+                'jumlah' => $jumlahPotongan,
                 'tanggal' => $tanggal,
-                'keterangan' => 'Potongan otomatis simpanan wajib bulan ' . $tanggal->translatedFormat('F Y'),
+                'keterangan' => 'Potongan otomatis simpanan wajib bulan ' . $tanggal->format('F Y'),
             ]);
 
-            $this->info("Simpanan wajib untuk {$anggota->name} berhasil ditambahkan.");
             $berhasil++;
         }
 
-        $this->info("Total berhasil: $berhasil, Total dilewati: $gagal");
+        Notifikasi::create([
+            'judul' => 'Potongan Simpanan Wajib Bulanan',
+            'pesan' => "Berhasil potong simpanan wajib untuk $berhasil anggota. Dilewati $dilewati anggota yang belum punya simpanan pokok.",
+            'is_read' => false,
+        ]);
+
+        $this->info("✅ Potongan selesai. $berhasil berhasil, $dilewati dilewati.");
     }
 }

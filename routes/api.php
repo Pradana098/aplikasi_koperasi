@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/status/{status}', [PengurusController::class, 'getAnggotaByStatus']);
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
+        Route::get('/pengurus/riwayat-simpanan-wajib/{user_id}', [PengurusController::class, 'riwayatWajibByPengurus']);
     });
 
 
@@ -37,6 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:anggota')->group(function () {
         Route::get('/dashboard/anggota', [AnggotaController::class, 'index']);
         Route::get('/anggota/status', [AnggotaController::class, 'statusPendaftaranSaya']);
-
+        Route::get('/riwayat-simpanan-wajib/{user_id}', [AnggotaController::class, 'riwayatWajib']);
     });
 });
