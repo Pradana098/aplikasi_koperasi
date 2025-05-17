@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
         Route::get('/pengurus/riwayat-simpanan-wajib/{user_id}', [PengurusController::class, 'riwayatWajibByPengurus']);
+        route::get('/pengurus/notifikasi',[PengurusController::class, 'listNotifikasi']);
     });
 
 

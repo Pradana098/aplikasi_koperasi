@@ -7,5 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notifikasi extends Model
 {
+     protected $table = 'notifikasi';
     protected $fillable = ['judul', 'pesan', 'is_read'];
 }
