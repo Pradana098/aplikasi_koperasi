@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Simpanan;
 use Carbon\Carbon;
+use App\Models\Notifikasi;
 
 class PengurusController extends Controller
 {
@@ -111,57 +112,46 @@ class PengurusController extends Controller
             'total_anggota' => $jumlah
         ]);
     }
-
-    public function riwayatWajibByPengurus(Request $request, $user_id)
+    public function semuaRiwayatSimpanan(Request $request)
     {
         $user = $request->user();
 
-        // Cek role harus pengurus
+        // Hanya pengurus yang boleh mengakses
         if ($user->role !== 'pengurus') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Hanya pengurus yang bisa mengakses data ini.'
+                'message' => 'Hanya pengurus yang dapat melihat semua riwayat simpanan.'
             ], 403);
         }
 
-        $anggota = \App\Models\User::where('id', $user_id)->where('role', 'anggota')->first();
-        if (!$anggota) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Anggota tidak ditemukan.'
-            ], 404);
-        }
-
-        $riwayat = \App\Models\Simpanan::where('user_id', $user_id)
-            ->where('jenis', 'wajib')
+        $riwayat = Simpanan::with('anggota') // pastikan relasi 'anggota' dibuat
             ->orderBy('tanggal', 'desc')
             ->get();
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'anggota' => $anggota->only(['id', 'name', 'email']),
-                'riwayat_simpanan_wajib' => $riwayat
-            ],
+            'data' => $riwayat
         ]);
     }
+
+
     public function listNotifikasi(Request $request)
-{
-    $user = $request->user();
-    if ($user->role !== 'pengurus') {
+    {
+        $user = $request->user();
+        if ($user->role !== 'pengurus') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
+            ], 403);
+        }
+
+        $notifikasi = Notifikasi::orderBy('created_at', 'desc')->get();
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
-        ], 403);
+            'status' => 'success',
+            'data' => $notifikasi,
+        ]);
     }
-
-    $notifikasi = \App\Models\Notifikasi::orderBy('created_at', 'desc')->get();
-
-    return response()->json([
-        'status' => 'success',
-        'data' => $notifikasi,
-    ]);
-}
 
 
 

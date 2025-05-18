@@ -1,14 +1,11 @@
 <?php
 
 use App\Http\Controllers\PengurusController;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PengawasController;
 use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
-use App\Http\Controllers\SimpananController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -30,8 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/status/{status}', [PengurusController::class, 'getAnggotaByStatus']);
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
-        Route::get('/pengurus/riwayat-simpanan-wajib/{user_id}', [PengurusController::class, 'riwayatWajibByPengurus']);
         route::get('/pengurus/notifikasi',[PengurusController::class, 'listNotifikasi']);
+        route::get('/pengurus/simpanan/riwayat', [PengurusController::class, 'semuaRiwayatSimpanan']);
     });
 
 
@@ -40,5 +37,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard/anggota', [AnggotaController::class, 'index']);
         Route::get('/anggota/status', [AnggotaController::class, 'statusPendaftaranSaya']);
         Route::get('/riwayat-simpanan-wajib/{user_id}', [AnggotaController::class, 'riwayatWajib']);
+         route::get('/anggota/notifikasi',[AnggotaController::class, 'listNotifikasi']);
     });
 });

@@ -50,24 +50,42 @@ class AnggotaController extends Controller
     }
 
     public function riwayatWajib(Request $request)
-{
-    $user = $request->user(); 
+    {
+        $user = $request->user();
 
-    if ($user->role !== 'anggota') {
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya anggota yang dapat melihat riwayat simpanan wajib.'
+            ], 403);
+        }
+
+        $riwayat = Simpanan::where('user_id', $user->id)
+            ->where('jenis', 'wajib')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Hanya anggota yang dapat melihat riwayat simpanan wajib.'
-        ], 403);
+            'status' => 'success',
+            'data' => $riwayat
+        ]);
     }
+    public function listNotifikasi(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
+            ], 403);
+        }
 
-    $riwayat = Simpanan::where('user_id', $user->id)
-        ->where('jenis', 'wajib')
-        ->orderBy('tanggal', 'desc')
-        ->get();
+        $notifikasi = \App\Models\Notifikasi::orderBy('created_at', 'desc')->get();
 
-    return response()->json([
-        'status' => 'success',
-        'data' => $riwayat
-    ]);
-}
+        return response()->json([
+            'status' => 'success',
+            'data' => $notifikasi,
+        ]);
+
+    }
 }

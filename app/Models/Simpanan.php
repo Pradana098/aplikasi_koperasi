@@ -24,4 +24,9 @@ class Simpanan extends Model
         'tanggal',
         'keterangan',
     ];
+
+      public function anggota()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
