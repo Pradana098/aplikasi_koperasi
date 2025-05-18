@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
 use App\Models\Simpanan;
+use App\Models\SimpananWajib;
+use Carbon\Carbon;
 
 class AnggotaController extends Controller
 {
@@ -88,4 +90,42 @@ class AnggotaController extends Controller
         ]);
 
     }
+
+    public function SimpananWajib(Request $request)
+    {
+
+
+        $user = $request->user();
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
+            ], 403);
+        }
+
+         $simpanan = Simpanan::where('user_id', $user->id)
+            ->where('jenis', 'wajib')
+            ->orderByDesc('tanggal')
+            ->get();
+
+
+        $total = $simpanan->sum('jumlah');
+        $lastDate = optional($simpanan->first())->tanggal;
+        $statusBulanIni = $simpanan->where('tanggal', '>=', now()->startOfMonth())->count() > 0;
+
+        return response()->json([
+            'total' => $total,
+            'last_cut_date' => $lastDate ? Carbon::parse($lastDate)->translatedFormat('d F Y') : null,
+            'status_bulan_ini' => $statusBulanIni,
+            'jadwal_pemotongan' => 'Setiap tanggal 1 tiap bulan',
+            'riwayat' => $simpanan->map(function ($item) {
+                return [
+                    'bulan' => Carbon::parse($item->tanggal)->translatedFormat('F Y'),
+                    'jumlah' => $item->jumlah,
+                    'status' => '✅',
+                ];
+            }),
+        ]);
+    }
 }
+

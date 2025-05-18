@@ -79,22 +79,25 @@ class PengurusController extends Controller
 
             // Jika status disetujui (aktif), lakukan pemotongan gaji untuk simpanan pokok
             if ($request->status === 'aktif') {
-                $jumlahSimpananPokok = 100000;
+            $jumlahPokok = 40000;
+            $jumlahWajib = 50000;
 
-                if ($anggota->gaji < $jumlahSimpananPokok) {
-                    throw new \Exception('Gaji anggota tidak mencukupi untuk simpanan pokok.');
-                }
+            Simpanan::create([
+                'user_id' => $anggota->id,
+                'jenis' => 'pokok',
+                'jumlah' => $jumlahPokok,
+                'tanggal' => Carbon::now(),
+                'keterangan' => 'Potongan otomatis simpanan pokok saat persetujuan anggota'
+            ]);
 
-
-                // Simpan data ke tabel simpanan
-                Simpanan::create([
-                    'user_id' => $anggota->id,
-                    'jenis' => 'pokok',
-                    'jumlah' => $jumlahSimpananPokok,
-                    'tanggal' => Carbon::now(),
-                    'keterangan' => 'Pemotongan otomatis dari gaji saat disetujui'
-                ]);
-            }
+            Simpanan::create([
+                'user_id' => $anggota->id,
+                'jenis' => 'wajib',
+                'jumlah' => $jumlahWajib,
+                'tanggal' => Carbon::now(),
+                'keterangan' => 'Potongan otomatis simpanan wajib saat persetujuan anggota'
+            ]);
+        }
 
             DB::commit();
 
