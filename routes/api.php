@@ -40,8 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/anggota/status', [AnggotaController::class, 'statusPendaftaranSaya']);
         Route::get('/riwayat-simpanan-wajib/{user_id}', [AnggotaController::class, 'riwayatWajib']);
         Route::get('/anggota/notifikasi', [AnggotaController::class, 'listNotifikasi']);
-        Route::get('/anggota/simpanan/wajib', [AnggotaController::class, 'SimpananWajib']);
-
+        Route::get('/anggota/simpanan-wajib', [AnggotaController::class, 'SimpananWajib']);
+        Route::post('/anggota/input/simpanan-sukarela',[AnggotaController::class, 'aturPotonganSukarela']);
+        Route::get('/anggota/simpanan-sukarela', [AnggotaController::class, 'statusPotonganSukarela']);
     });
 
 

@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('simpanan:potong-wajib')->monthlyOn(1, '02:00');
+        $schedule->command('potong:simpanan-sukarela')->monthlyOn(1, '07:00'); 
+
     }
 
 

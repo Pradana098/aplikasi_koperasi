@@ -78,7 +78,7 @@ class AnggotaController extends Controller
         if ($user->role !== 'anggota') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
+                'message' => 'Hanya anggota yang bisa melihat notifikasi.'
             ], 403);
         }
 
@@ -99,11 +99,10 @@ class AnggotaController extends Controller
         if ($user->role !== 'anggota') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Hanya pengurus yang bisa melihat notifikasi.'
             ], 403);
         }
 
-         $simpanan = Simpanan::where('user_id', $user->id)
+        $simpanan = Simpanan::where('user_id', $user->id)
             ->where('jenis', 'wajib')
             ->orderByDesc('tanggal')
             ->get();
@@ -125,6 +124,75 @@ class AnggotaController extends Controller
                     'status' => '✅',
                 ];
             }),
+        ]);
+    }
+
+    public function aturPotonganSukarela(Request $request)
+    {
+        $request->validate([
+            'jumlah' => 'required|numeric|min:1000',
+        ]);
+
+        $user = $request->user();
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya anggota yang dapat mengatur potongan sukarela.',
+
+            ], 403);
+        }
+
+
+        $user->auto_sukarela = $request->jumlah;
+        $user->save();
+
+        Simpanan::create([
+            'user_id' => $user->id,
+            'jenis' => 'sukarela',
+            'jumlah' => $request->jumlah,
+            'tanggal' => Carbon::now(),
+            'keterangan' => 'Potongan awal simpanan sukarela',
+        ]);
+
+        return response()->json([
+            'message' => 'Potongan sukarela otomatis berhasil diatur dan langsung dipotong hari ini.',
+        ]);
+    }
+    public function berhentiSimpananSukarela(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'message' => 'Hanya anggota yang dapat mengubah simpanan sukarela.'
+            ], 403);
+        }
+
+        $user->auto_sukarela = null;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Simpanan sukarela otomatis berhasil dihentikan.'
+        ]);
+    }
+
+
+    public function statusPotonganSukarela(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'anggota') {
+            return response()->json([
+                'status' => 'error',
+            ], 403);
+        }
+
+
+        return response()->json([
+            'auto_sukarela' => $user->auto_sukarela,
+            'status' => $user->auto_sukarela ? 'aktif' : 'tidak aktif',
+            'pesan' => $user->auto_sukarela
+                ? 'Potongan otomatis aktif sebesar Rp ' . number_format($user->auto_sukarela, 0, ',', '.')
+                : 'Potongan otomatis belum diaktifkan',
         ]);
     }
 }
