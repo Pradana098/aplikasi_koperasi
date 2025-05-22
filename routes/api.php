@@ -41,4 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/anggota/simpanan/wajib', [AnggotaController::class, 'SimpananWajib']);
 
     });
+
+    // route untuk semua role update profile
+    Route::middleware('auth:sanctum')->put('/user/profile', [UserController::class, 'updateProfile']);
+
+
 });

@@ -108,4 +108,34 @@ class AuthController extends Controller
         ]);
     }
 
+        public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+        ]);
+
+        // Update data
+        $user->name = $request->name;
+        $user->phone = $request->phone;
+        $user->address = $request->address;
+
+        if ($request->hasFile('photo')) {
+            // Simpan foto ke folder storage/app/public/profile
+            $path = $request->file('photo')->store('profile', 'public');
+            $user->photo = $path;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui.',
+            'user' => $user
+        ]);
+    }
+
 }
