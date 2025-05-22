@@ -15,6 +15,8 @@ Route::post('/buat-password/{token}', [AuthController::class, 'submitPassword'])
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile',[AuthController::class, 'getProfile']);
+    Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 
     // Route untuk role pengawas
     Route::middleware('role:pengawas')->group(function () {
@@ -27,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/status/{status}', [PengurusController::class, 'getAnggotaByStatus']);
         Route::post('/anggota/verifikasi/{id}', [PengurusController::class, 'verifikasi']);
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
-        route::get('/pengurus/notifikasi',[PengurusController::class, 'listNotifikasi']);
+        route::get('/pengurus/notifikasi', [PengurusController::class, 'listNotifikasi']);
         route::get('/pengurus/simpanan/riwayat', [PengurusController::class, 'semuaRiwayatSimpanan']);
     });
 
@@ -37,13 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard/anggota', [AnggotaController::class, 'index']);
         Route::get('/anggota/status', [AnggotaController::class, 'statusPendaftaranSaya']);
         Route::get('/riwayat-simpanan-wajib/{user_id}', [AnggotaController::class, 'riwayatWajib']);
-        Route::get('/anggota/notifikasi',[AnggotaController::class, 'listNotifikasi']);
+        Route::get('/anggota/notifikasi', [AnggotaController::class, 'listNotifikasi']);
         Route::get('/anggota/simpanan/wajib', [AnggotaController::class, 'SimpananWajib']);
 
     });
 
-    // route untuk semua role update profile
-    Route::middleware('auth:sanctum')->put('/user/profile', [UserController::class, 'updateProfile']);
+
 
 
 });

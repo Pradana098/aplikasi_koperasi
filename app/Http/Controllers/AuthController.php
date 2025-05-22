@@ -99,7 +99,7 @@ class AuthController extends Controller
         ]);
     }
 
-      public function logout(Request $request)
+    public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
@@ -108,7 +108,7 @@ class AuthController extends Controller
         ]);
     }
 
-        public function updateProfile(Request $request)
+    public function updateProfile(Request $request)
     {
         $user = Auth::user();
 
@@ -137,5 +137,19 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
+    public function getProfile(Request $request)
+    {
+        $user = Auth::user();
 
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Profil pengguna berhasil diambil.',
+            'user' => $user
+        ]);
+    }
 }
