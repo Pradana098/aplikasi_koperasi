@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PengawasController;
 use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
+use App\Http\Controllers\PinjamanController;
+use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -31,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
         route::get('/pengurus/notifikasi', [PengurusController::class, 'listNotifikasi']);
         route::get('/pengurus/simpanan/riwayat', [PengurusController::class, 'semuaRiwayatSimpanan']);
+        Route::post('/pengurus/pinjaman/ajukan', [PinjamanController::class, 'ajukanPinjaman']);
+        Route::get('/pengurus/pinjaman/pengajuan', [PinjamanController::class, 'daftarPengajuan']);
+        Route::post('/pengurus/pinjaman/proses/{id}', [PinjamanController::class, 'prosesPengajuan']);
     });
 
 
