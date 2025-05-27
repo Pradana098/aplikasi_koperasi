@@ -7,6 +7,7 @@ use App\Http\Controllers\PengawasController;
 use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\PinjamanController;
+use App\Http\Controllers\AnggotaManajemenController;
 use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -50,6 +51,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/anggota/simpanan-sukarela', [AnggotaController::class, 'statusPotonganSukarela']);
     });
 
+    // Untuk Pengurus
+        Route::middleware(['auth:sanctum', 'role:pengurus'])->group(function () {
+        Route::get('/pengurus/anggota', [AnggotaManajemenController::class, 'index']);
+        Route::post('/pengurus/anggota', [AnggotaManajemenController::class, 'store']);
+        Route::put('/pengurus/anggota/{id}', [AnggotaManajemenController::class, 'update']);
+        Route::delete('/pengurus/anggota/{id}', [AnggotaManajemenController::class, 'destroy']);
+    });
+
+    // Untuk Pengawas
+        Route::middleware(['auth:sanctum', 'role:pengawas'])->group(function () {
+        Route::get('/pengawas/anggota/{id}', [AnggotaManajemenController::class, 'show']);
+        Route::get('/pengawas/anggota/export/excel', [AnggotaManajemenController::class, 'exportExcel']);
+        Route::get('/pengawas/anggota/export/pdf', [AnggotaManajemenController::class, 'exportPDF']);
+    });
 
 
 
