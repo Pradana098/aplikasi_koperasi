@@ -84,16 +84,16 @@ class AnggotaManajemenController extends Controller
     }
 
     // PENGAWAS: Export Excel
-    public function exportExcel()
-    {
-        return Excel::download(new AnggotaExport, 'data_anggota.xlsx');
-    }
+    // public function exportExcel()
+    // {
+    //     return Excel::download(new AnggotaExport, 'data_anggota.xlsx');
+    // }
 
-    // PENGAWAS: Export PDF
-    public function exportPDF()
-    {
-        $anggota = User::all();
-        $pdf = Pdf::loadView('pdf.anggota', compact('anggota'));
-        return $pdf->download('data_anggota.pdf');
-    }
+    // // PENGAWAS: Export PDF
+    // public function exportPDF()
+    // {
+    //     $anggota = User::all();
+    //     $pdf = Pdf::loadView('pdf.anggota', compact('anggota'));
+    //     return $pdf->download('data_anggota.pdf');
+    // }
 }

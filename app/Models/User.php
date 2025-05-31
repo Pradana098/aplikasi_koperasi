@@ -58,10 +58,10 @@ class User extends Authenticatable implements CanResetPassword
     /**
      * Relasi ke tabel Simpanan
      */
-  public function simpanan()
-{
-    return $this->hasMany(\App\Models\Simpanan::class, 'user_id');
-}
+    public function simpanan()
+    {
+        return $this->hasMany(\App\Models\Simpanan::class, 'user_id');
+    }
 
     /**
      * Relasi ke tabel Pinjaman
@@ -70,4 +70,10 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $this->hasMany(Pinjaman::class);
     }
+
+    public function autoPotonganSukarela()
+    {
+        return $this->hasOne(AutoPotonganSukarela::class);
+    }
+
 }

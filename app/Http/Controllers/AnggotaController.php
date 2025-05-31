@@ -6,6 +6,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
 use App\Models\Simpanan;
 use App\Models\SimpananWajib;
+use App\Models\AutoPotonganSukarela;
 use Carbon\Carbon;
 
 class AnggotaController extends Controller
@@ -134,28 +135,30 @@ class AnggotaController extends Controller
         ]);
 
         $user = $request->user();
+
         if ($user->role !== 'anggota') {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Hanya anggota yang dapat mengatur potongan sukarela.',
-
             ], 403);
         }
 
-
-        $user->auto_sukarela = $request->jumlah;
-        $user->save();
+        AutoPotonganSukarela::updateOrCreate(
+            ['user_id' => $user->id],
+            ['jumlah' => $request->jumlah]
+        );
 
         Simpanan::create([
             'user_id' => $user->id,
             'jenis' => 'sukarela',
             'jumlah' => $request->jumlah,
-            'tanggal' => Carbon::now(),
-            'keterangan' => 'Potongan awal simpanan sukarela',
+            'tanggal' => now(),
+            'keterangan' => 'Potongan awal simpanan sukarela (manual)',
         ]);
 
         return response()->json([
-            'message' => 'Potongan sukarela otomatis berhasil diatur dan langsung dipotong hari ini.',
+            'status' => 'success',
+            'message' => 'Potongan sukarela otomatis berhasil diatur.',
         ]);
     }
     public function berhentiSimpananSukarela(Request $request)
@@ -177,8 +180,9 @@ class AnggotaController extends Controller
     }
 
 
-    public function statusPotonganSukarela(Request $request)
+    public function riwayatRutin(Request $request)
     {
+
         $user = $request->user();
         if ($user->role !== 'anggota') {
             return response()->json([
@@ -186,13 +190,24 @@ class AnggotaController extends Controller
             ], 403);
         }
 
+        $riwayat = Simpanan::where('user_id', $user->id)
+            ->where('jenis', 'sukarela')
+            ->orderBy('tanggal', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'tanggal' => Carbon::parse($item->tanggal)->format('Y-m-d'),
+                    'jumlah' => $item->jumlah,
+                    'keterangan' => $item->keterangan,
+                    'status' => $item->jumlah > 0 ? 'Sukses' : 'Tidak Aktif',
+                ];
+            });
+
+        $total = $riwayat->sum('jumlah');
 
         return response()->json([
-            'auto_sukarela' => $user->auto_sukarela,
-            'status' => $user->auto_sukarela ? 'aktif' : 'tidak aktif',
-            'pesan' => $user->auto_sukarela
-                ? 'Potongan otomatis aktif sebesar Rp ' . number_format($user->auto_sukarela, 0, ',', '.')
-                : 'Potongan otomatis belum diaktifkan',
+            'total' => $total,
+            'riwayat' => $riwayat,
         ]);
     }
 }

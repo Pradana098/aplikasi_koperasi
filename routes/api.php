@@ -18,7 +18,7 @@ Route::post('/buat-password/{token}', [AuthController::class, 'submitPassword'])
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/profile',[AuthController::class, 'getProfile']);
+    Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 
     // Route untuk role pengawas
@@ -47,12 +47,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/riwayat-simpanan-wajib/{user_id}', [AnggotaController::class, 'riwayatWajib']);
         Route::get('/anggota/notifikasi', [AnggotaController::class, 'listNotifikasi']);
         Route::get('/anggota/simpanan-wajib', [AnggotaController::class, 'SimpananWajib']);
-        Route::post('/anggota/input/simpanan-sukarela',[AnggotaController::class, 'aturPotonganSukarela']);
-        Route::get('/anggota/simpanan-sukarela', [AnggotaController::class, 'statusPotonganSukarela']);
+        Route::post('/anggota/input/simpanan-sukarela', [AnggotaController::class, 'aturPotonganSukarela']);
+        Route::get('/anggota/riwayat-simpanan-sukarela', [AnggotaController::class, 'riwayatRutin']);
     });
 
     // Untuk Pengurus
-        Route::middleware(['auth:sanctum', 'role:pengurus'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:pengurus'])->group(function () {
         Route::get('/pengurus/anggota', [AnggotaManajemenController::class, 'index']);
         Route::post('/pengurus/anggota', [AnggotaManajemenController::class, 'store']);
         Route::put('/pengurus/anggota/{id}', [AnggotaManajemenController::class, 'update']);
@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Untuk Pengawas
-        Route::middleware(['auth:sanctum', 'role:pengawas'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:pengawas'])->group(function () {
         Route::get('/pengawas/anggota/{id}', [AnggotaManajemenController::class, 'show']);
         Route::get('/pengawas/anggota/export/excel', [AnggotaManajemenController::class, 'exportExcel']);
         Route::get('/pengawas/anggota/export/pdf', [AnggotaManajemenController::class, 'exportPDF']);

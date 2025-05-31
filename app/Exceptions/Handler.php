@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
@@ -39,19 +40,26 @@ class Handler extends ExceptionHandler
             //
         });
     }
-
-
-
-public function render($request, Throwable $exception)
-{
-    if ($exception instanceof ValidationException) {
+    public function unauthenticated($request, AuthenticationException $exception)
+    {
         return response()->json([
-            'message' => 'masukkan nip dan password.',
-            'errors' => $exception->errors()
-        ], 422);
+            'message' => 'Unauthenticated.',
+        ], 401);
     }
 
-    return parent::render($request, $exception);
-}
+
+
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof ValidationException) {
+            return response()->json([
+                'message' => 'masukkan nip dan password.',
+                'errors' => $exception->errors()
+            ], 422);
+        }
+
+        return parent::render($request, $exception);
+    }
 
 }
