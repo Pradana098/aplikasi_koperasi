@@ -8,6 +8,7 @@ use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\PinjamanController;
 use App\Http\Controllers\AnggotaManajemenController;
+use App\Http\Controllers\LaporanSimpananController;
 use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -20,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/update-profile', [AuthController::class, 'updateProfile']);
+    Route::get('/laporan-simpanan', [LaporanSimpananController::class, 'index']);
 
     // Route untuk role pengawas
     Route::middleware('role:pengawas')->group(function () {
