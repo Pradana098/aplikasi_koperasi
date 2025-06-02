@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Auth\ForgotPasswordController;
 use App\Http\Controllers\PinjamanController;
 use App\Http\Controllers\AnggotaManajemenController;
 use App\Http\Controllers\LaporanSimpananController;
+use App\Http\Controllers\SimpananController;
 use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -67,6 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pengawas/anggota/export/excel', [AnggotaManajemenController::class, 'exportExcel']);
         Route::get('/pengawas/anggota/export/pdf', [AnggotaManajemenController::class, 'exportPDF']);
     });
+
+      Route::prefix('simpanan')->group(function () {
+        Route::get('/', [SimpananController::class, 'index']);
+        Route::get('/laporan', [LaporanSimpananController::class, 'index']);
+    });
+
 
 
 
