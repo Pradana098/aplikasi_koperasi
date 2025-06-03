@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::post('/update-profile', [AuthController::class, 'updateProfile']);
-    Route::get('/laporan-simpanan', [LaporanSimpananController::class, 'index']);
+    Route::get('/laporan-simpanan', [LaporanSimpananController::class, 'LaporanSimpanan']);
 
     // Route untuk role pengawas
     Route::middleware('role:pengawas')->group(function () {
@@ -82,7 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
       Route::prefix('simpanan')->group(function () {
         Route::get('/', [SimpananController::class, 'index']);
-        Route::get('/laporan', [LaporanSimpananController::class, 'index']);
+        // Route::get('/laporan', [LaporanSimpananController::class, 'index']);
     });
 
 
