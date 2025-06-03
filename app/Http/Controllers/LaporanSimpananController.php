@@ -36,13 +36,14 @@ class LaporanSimpananController extends Controller
                 'users.id',
                 'users.nama',
                 DB::raw("COALESCE(SUM(CASE WHEN simpanan.jenis = 'pokok' THEN simpanan.jumlah ELSE 0 END), 0) as simpanan_pokok"),
-                DB::raw("COALESCE(SUM(CASE WHEN simpanan.jenis = 'wajib' THEN simpanan.jumlah ELSE 0 END), 0) as simpanan_wajib")
+                DB::raw("COALESCE(SUM(CASE WHEN simpanan.jenis = 'wajib' THEN simpanan.jumlah ELSE 0 END), 0) as simpanan_wajib"),
+                DB::raw("COALESCE(SUM(CASE WHEN simpanan.jenis = 'sukarela' THEN simpanan.jumlah ELSE 0 END), 0) as simpanan_sukarela")
             )
             ->leftJoin('simpanan', function ($join) use ($bulan, $tahun) {
                 $join->on('simpanan.user_id', '=', 'users.id')
                     ->whereMonth('simpanan.tanggal', $bulan)
                     ->whereYear('simpanan.tanggal', $tahun)
-                    ->whereIn('simpanan.jenis', ['pokok', 'wajib']);
+                    ->whereIn('simpanan.jenis', ['pokok', 'wajib', 'sukarela']);
             })
             ->where('users.role', 'anggota')
             ->groupBy('users.id', 'users.nama')
