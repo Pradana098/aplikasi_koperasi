@@ -2,112 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pinjaman;
-use App\Models\User;
-use App\Models\Notifikasi;
 use Illuminate\Http\Request;
+use App\Models\Pinjaman;
+use App\Models\Cicilan;
+use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class PinjamanController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth:sanctum']);
-    }
-
-   public function ajukanPinjaman(Request $request)
-{
-    $request->validate([
-        'jumlah' => 'required|integer|min:1000000'
-    ]);
-
-    $user = $request->user();
-
-    $lamaCicilan = $request->jumlah > 50000000 ? 12 : 10;
-
-    $pinjaman = Pinjaman::create([
-        'user_id' => $user->id,
-        'jumlah_pinjaman' => $request->jumlah,
-        'tenor' => $lamaCicilan,
-        'bunga' => 5,
-        'status' => 'menunggu',
-        'tanggal_pengajuan' => now() // Tambahkan ini
-    ]);
-
-    // Simpan notifikasi tanpa user_id
-    Notifikasi::create([
-        'judul' => 'Pengajuan Pinjaman Baru',
-        'pesan' => 'Ada pengajuan pinjaman baru dari ' . $user->name . ', silakan cek dan proses.'
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Pengajuan pinjaman berhasil disimpan dan menunggu persetujuan.',
-        'data' => $pinjaman
-    ]);
-}
-
-    // Melihat semua pengajuan oleh pengurus
-    public function daftarPengajuan()
-    {
-        $pengajuan = Pinjaman::with('user')->orderBy('created_at', 'desc')->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $pengajuan
-        ]);
-    }
-
-    // Persetujuan atau Penolakan Pinjaman
-    public function prosesPengajuan(Request $request, $id)
+    // Anggota mengajukan pinjaman
+    public function ajukanPinjaman(Request $request)
     {
         $request->validate([
-            'status' => 'required|in:disetujui,ditolak'
+            'jumlah_pinjaman' => 'required|numeric|min:100000',
+            'tanggal_pengajuan' => 'required|date',
         ]);
 
-        $pinjaman = Pinjaman::find($id);
+        $pinjaman = Pinjaman::create([
+            'user_id' => auth()->id(),
+            'jumlah_pinjaman' => $request->jumlah_pinjaman,
+            'tanggal_pengajuan' => $request->tanggal_pengajuan,
+            'status' => 'menunggu',
+        ]);
 
-        if (!$pinjaman) {
-            return response()->json(['error' => 'Pengajuan tidak ditemukan'], 404);
-        }
+        return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim', 'data' => $pinjaman]);
+    }
+
+    // Pengurus menyetujui dan menentukan tenor + bunga
+    public function setujuiPinjaman(Request $request, $id)
+    {
+        $request->validate([
+            'tenor' => 'required|integer|min:1',
+            'bunga' => 'required|numeric|min:0',
+        ]);
 
         DB::beginTransaction();
         try {
-            $pinjaman->status = $request->status;
-            $pinjaman->save();
+            $pinjaman = Pinjaman::findOrFail($id);
 
-            $anggota = User::find($pinjaman->user_id);
+            if ($pinjaman->status !== 'menunggu') {
+                return response()->json(['message' => 'Pinjaman sudah diproses sebelumnya'], 400);
+            }
 
-            if ($request->status == 'disetujui') {
-                // Tambahkan saldo ke anggota
-                $anggota->saldo += $pinjaman->jumlah_pinjaman;
-                $anggota->save();
+            $pinjaman->update([
+                'tenor' => $request->tenor,
+                'bunga' => $request->bunga,
+                'status' => 'disetujui',
+            ]);
 
-                // Kirim notifikasi
-                Notifikasi::create([
-                    'user_id' => $anggota->id,
-                    'judul' => 'Pinjaman Disetujui',
-                    'pesan' => 'Pengajuan pinjaman Anda sebesar Rp' . number_format($pinjaman->jumlah_pinjaman, 0, ',', '.') . ' telah disetujui.'
-                ]);
-            } else {
-                // Kirim notifikasi penolakan
-                Notifikasi::create([
-                    'user_id' => $anggota->id,
-                    'judul' => 'Pinjaman Ditolak',
-                    'pesan' => 'Pengajuan pinjaman Anda telah ditolak oleh pengurus.'
+            $jumlahPinjaman = $pinjaman->jumlah_pinjaman;
+            $tenor = $request->tenor;
+            $bunga = $request->bunga;
+
+            // Total pengembalian
+            $totalBunga = ($bunga / 100) * $jumlahPinjaman * $tenor;
+            $totalPengembalian = $jumlahPinjaman + $totalBunga;
+            $cicilanBulanan = round($totalPengembalian / $tenor, 2);
+
+            // Buat cicilan otomatis
+            $tanggalMulai = Carbon::now()->startOfMonth()->addMonth();
+            for ($i = 1; $i <= $tenor; $i++) {
+                Cicilan::create([
+                    'pinjaman_id' => $pinjaman->id,
+                    'bulan_ke' => $i,
+                    'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($i - 1)->endOfMonth(),
+                    'jumlah_cicilan' => $cicilanBulanan,
+                    'status' => 'belum_lunas',
                 ]);
             }
 
+            // Transfer saldo ke anggota
+            $user = User::find($pinjaman->user_id);
+            $user->saldo += $jumlahPinjaman;
+            $user->save();
+
             DB::commit();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Status pinjaman berhasil diperbarui.'
-            ]);
-
+            return response()->json(['message' => 'Pinjaman disetujui & cicilan dibuat otomatis']);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Gagal memproses pinjaman: ' . $e->getMessage()], 500);
+            DB::rollback();
+            return response()->json(['message' => 'Gagal menyetujui pinjaman', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    // Menampilkan semua pinjaman (admin/pengurus)
+    public function daftarPengajuan()
+    {
+        $pinjaman = Pinjaman::with('user')->latest()->get();
+        return response()->json($pinjaman);
+    }
+
+    // Detail pinjaman & cicilan
+    public function detailPinjaman($id)
+    {
+        $pinjaman = Pinjaman::with(['user', 'cicilan'])->findOrFail($id);
+        return response()->json($pinjaman);
+    }
+
+    // Anggota bisa melihat pinjamannya sendiri
+    public function pinjamanSaya()
+    {
+        $pinjaman = Pinjaman::where('user_id', auth()->id())->with('cicilan')->get();
+        return response()->json($pinjaman);
     }
 }

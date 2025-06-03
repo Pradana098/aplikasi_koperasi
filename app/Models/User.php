@@ -28,7 +28,8 @@ class User extends Authenticatable implements CanResetPassword
         'sk_perjanjian_kerja',
         'role',
         'status',
-        'photo_path'
+        'photo_path',
+        'saldo',
     ];
 
     /**

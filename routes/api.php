@@ -37,9 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pengurus/jumlah-anggota', [PengurusController::class, 'jumlahAnggota']);
         route::get('/pengurus/notifikasi', [PengurusController::class, 'listNotifikasi']);
         route::get('/pengurus/simpanan/riwayat', [PengurusController::class, 'semuaRiwayatSimpanan']);
-        Route::post('/pengurus/pinjaman/ajukan', [PinjamanController::class, 'ajukanPinjaman']);
-        Route::get('/pengurus/pinjaman/pengajuan', [PinjamanController::class, 'daftarPengajuan']);
-        Route::post('/pengurus/pinjaman/proses/{id}', [PinjamanController::class, 'prosesPengajuan']);
+        Route::get('/pinjaman/pengajuan', [PinjamanController::class, 'daftarPengajuan']);
+        Route::post('/pinjaman/{id}/setujui', [PinjamanController::class, 'setujuiPinjaman']);
+        Route::post('/pinjaman/{id}/tolak', [PinjamanController::class, 'tolakPinjaman']);
+        Route::post('/pinjaman/{id}/transfer', [PinjamanController::class, 'transferSaldo']);
+        Route::get('/pinjaman/{id}/detail', [PinjamanController::class, 'detailPinjaman']);
     });
 
 
@@ -52,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/anggota/simpanan-wajib', [AnggotaController::class, 'SimpananWajib']);
         Route::post('/anggota/input/simpanan-sukarela', [AnggotaController::class, 'aturPotonganSukarela']);
         Route::get('/anggota/riwayat-simpanan-sukarela', [AnggotaController::class, 'riwayatRutin']);
+        Route::post('/pinjaman/ajukan', [PinjamanController::class, 'ajukanPinjaman']);
+        Route::get('/pinjaman/saya', [PinjamanController::class, 'pinjamanSaya']);
+        
     });
 
     // Untuk Pengurus
@@ -67,6 +72,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pengawas/anggota/{id}', [AnggotaManajemenController::class, 'show']);
         Route::get('/pengawas/anggota/export/excel', [AnggotaManajemenController::class, 'exportExcel']);
         Route::get('/pengawas/anggota/export/pdf', [AnggotaManajemenController::class, 'exportPDF']);
+    });
+
+    // Untuk Anggota
+    Route::middleware(['auth:sanctum', 'role:anggota'])->group(function () {
+        Route::post('/pinjaman/ajukan', [PinjamanController::class, 'ajukanPinjaman']);
+        Route::get('/pinjaman/saya', [PinjamanController::class, 'pinjamanSaya']);
     });
 
       Route::prefix('simpanan')->group(function () {

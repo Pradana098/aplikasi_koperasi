@@ -16,17 +16,17 @@ class RoleMiddleware
             return response()->json(['message' => 'Unauthorized (Role)'], 403);
         }
         if ($role === 'anggota') {
-            // Cek apakah sudah bayar simpanan pokok
-            $sudahBayarPokok = $user->simpanan()
-                ->where('jenis', 'pokok')
-                ->exists();
+            // // Cek apakah sudah bayar simpanan pokok
+            // $sudahBayarPokok = $user->simpanan()
+            //     ->where('jenis', 'pokok')
+            //     ->exists();
                 
-            if (!$sudahBayarPokok) {
-                return response()->json([
-                    'message' => 'Silakan lakukan pembayaran simpanan pokok terlebih dahulu.',
-                    'status' => 'require_simpanan_pokok'
-                ], 403);
-            }
+            // if (!$sudahBayarPokok) {
+            //     return response()->json([
+            //         'message' => 'Silakan lakukan pembayaran simpanan pokok terlebih dahulu.',
+            //         'status' => 'require_simpanan_pokok'
+            //     ], 403);
+            // }
         }
 
         return $next($request);

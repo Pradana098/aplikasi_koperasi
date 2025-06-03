@@ -17,12 +17,14 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('pinjaman_id');
             $table->foreign('pinjaman_id')->references('id')->on('pinjaman')->onDelete('cascade');
+            $table->unique(['pinjaman_id', 'bulan_ke']);
             $table->integer('bulan_ke');
             $table->date('tanggal_jatuh_tempo');
             $table->decimal('jumlah_cicilan', 15, 2);
             $table->enum('status', ['belum_lunas', 'lunas'])->default('belum_lunas');
             $table->timestamps();
         });
+        
     }
 
     /**

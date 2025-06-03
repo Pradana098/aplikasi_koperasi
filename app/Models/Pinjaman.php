@@ -9,19 +9,26 @@ class Pinjaman extends Model
 {
     use HasFactory;
 
-    protected $table = 'pinjaman'; // jika nama tabel tidak default 'pinjamen'
+    protected $table = 'pinjaman'; // nama tabel sesuai dengan database kamu
 
     protected $fillable = [
         'user_id',
         'jumlah_pinjaman',
         'tenor',
-        'bunga',          // kalau di insert juga
-        'tanggal_pengajuan', // kalau di insert juga
-        'status'
+        'bunga',
+        'tanggal_pengajuan',
+        'status',
     ];
 
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relasi ke Cicilan (satu pinjaman punya banyak cicilan)
+    public function cicilan()
+    {
+        return $this->hasMany(Cicilan::class);
     }
 }
