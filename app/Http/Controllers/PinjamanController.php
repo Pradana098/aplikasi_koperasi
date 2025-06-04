@@ -29,7 +29,7 @@ class PinjamanController extends Controller
         return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim', 'data' => $pinjaman]);
     }
 
-    // Pengurus menyetujui dan menentukan tenor + bunga
+    // Pengurus menyetujui pinjaman dan menentukan tenor + bunga (tanpa cicilan otomatis)
     public function setujuiPinjaman(Request $request, $id)
     {
         $request->validate([
@@ -51,39 +51,42 @@ class PinjamanController extends Controller
                 'status' => 'disetujui',
             ]);
 
-            $jumlahPinjaman = $pinjaman->jumlah_pinjaman;
-            $tenor = $request->tenor;
-            $bunga = $request->bunga;
-
-            // Total pengembalian
-            $totalBunga = ($bunga / 100) * $jumlahPinjaman * $tenor;
-            $totalPengembalian = $jumlahPinjaman + $totalBunga;
-            $cicilanBulanan = round($totalPengembalian / $tenor, 2);
-
-            // Buat cicilan otomatis
-            $tanggalMulai = Carbon::now()->startOfMonth()->addMonth();
-            for ($i = 1; $i <= $tenor; $i++) {
-                Cicilan::create([
-                    'pinjaman_id' => $pinjaman->id,
-                    'bulan_ke' => $i,
-                    'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($i - 1)->endOfMonth(),
-                    'jumlah_cicilan' => $cicilanBulanan,
-                    'status' => 'belum_lunas',
-                ]);
-            }
-
             // Transfer saldo ke anggota
             $user = User::find($pinjaman->user_id);
-            $user->saldo += $jumlahPinjaman;
+            $user->saldo += $pinjaman->jumlah_pinjaman;
             $user->save();
 
             DB::commit();
 
-            return response()->json(['message' => 'Pinjaman disetujui & cicilan dibuat otomatis']);
+            return response()->json([
+                'message' => 'Pinjaman disetujui. Silakan buat cicilan manual sesuai kebutuhan.'
+            ]);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => 'Gagal menyetujui pinjaman', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    // Pengurus membuat cicilan manual untuk pinjaman
+    public function tambahCicilanManual(Request $request, $pinjaman_id)
+    {
+        $request->validate([
+            'bulan_ke' => 'required|integer|min:1',
+            'tanggal_jatuh_tempo' => 'required|date',
+            'jumlah_cicilan' => 'required|numeric|min:1000',
+        ]);
+
+        $pinjaman = Pinjaman::findOrFail($pinjaman_id);
+
+        $cicilan = Cicilan::create([
+            'pinjaman_id' => $pinjaman->id,
+            'bulan_ke' => $request->bulan_ke,
+            'tanggal_jatuh_tempo' => $request->tanggal_jatuh_tempo,
+            'jumlah_cicilan' => $request->jumlah_cicilan,
+            'status' => 'belum_lunas',
+        ]);
+
+        return response()->json(['message' => 'Cicilan berhasil ditambahkan', 'data' => $cicilan]);
     }
 
     // Menampilkan semua pinjaman (admin/pengurus)
