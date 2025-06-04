@@ -67,26 +67,37 @@ class PinjamanController extends Controller
         }
     }
 
-    // Pengurus membuat cicilan manual untuk pinjaman
+    // Pengurus membuat cicilan manual untuk pinjaman (bisa batch atau satu per satu)
     public function tambahCicilanManual(Request $request, $pinjaman_id)
     {
         $request->validate([
-            'bulan_ke' => 'required|integer|min:1',
-            'tanggal_jatuh_tempo' => 'required|date',
-            'jumlah_cicilan' => 'required|numeric|min:1000',
+            'cicilan' => 'required|array|min:1',
+            'cicilan.*.bulan_ke' => 'required|integer|min:1',
+            'cicilan.*.tanggal_jatuh_tempo' => 'required|date|after_or_equal:today',
+            'cicilan.*.jumlah_cicilan' => 'required|numeric|min:1000',
         ]);
 
         $pinjaman = Pinjaman::findOrFail($pinjaman_id);
 
-        $cicilan = Cicilan::create([
-            'pinjaman_id' => $pinjaman->id,
-            'bulan_ke' => $request->bulan_ke,
-            'tanggal_jatuh_tempo' => $request->tanggal_jatuh_tempo,
-            'jumlah_cicilan' => $request->jumlah_cicilan,
-            'status' => 'belum_lunas',
-        ]);
+        DB::beginTransaction();
+        try {
+            foreach ($request->cicilan as $data) {
+                Cicilan::updateOrCreate(
+                    ['pinjaman_id' => $pinjaman->id, 'bulan_ke' => $data['bulan_ke']],
+                    [
+                        'tanggal_jatuh_tempo' => $data['tanggal_jatuh_tempo'],
+                        'jumlah_cicilan' => $data['jumlah_cicilan'],
+                        'status' => 'belum_lunas',
+                    ]
+                );
+            }
 
-        return response()->json(['message' => 'Cicilan berhasil ditambahkan', 'data' => $cicilan]);
+            DB::commit();
+            return response()->json(['message' => 'Cicilan berhasil ditambahkan atau diperbarui']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Gagal menambahkan cicilan', 'error' => $e->getMessage()], 500);
+        }
     }
 
     // Menampilkan semua pinjaman (admin/pengurus)
