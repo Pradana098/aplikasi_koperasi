@@ -29,7 +29,7 @@ class PinjamanController extends Controller
         return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim', 'data' => $pinjaman]);
     }
 
-    // Pengurus menyetujui dan menentukan tenor + bunga
+    // Pengurus menyetujui dan menentukan tenor + bunga (tanpa transfer saldo)
     public function setujuiPinjaman(Request $request, $id)
     {
         $request->validate([
@@ -72,14 +72,9 @@ class PinjamanController extends Controller
                 ]);
             }
 
-            // Transfer saldo ke anggota
-            $user = User::find($pinjaman->user_id);
-            $user->saldo += $jumlahPinjaman;
-            $user->save();
-
             DB::commit();
 
-            return response()->json(['message' => 'Pinjaman disetujui & cicilan dibuat otomatis']);
+            return response()->json(['message' => 'Pinjaman disetujui & cicilan dibuat otomatis. Silakan lakukan transfer saldo secara manual']);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => 'Gagal menyetujui pinjaman', 'error' => $e->getMessage()], 500);
@@ -105,5 +100,21 @@ class PinjamanController extends Controller
     {
         $pinjaman = Pinjaman::where('user_id', auth()->id())->with('cicilan')->get();
         return response()->json($pinjaman);
+    }
+
+    // Fungsi tolak pinjaman (bisa kamu tambahkan jika ingin)
+    public function tolakPinjaman($id)
+    {
+        $pinjaman = Pinjaman::findOrFail($id);
+
+        if ($pinjaman->status !== 'menunggu') {
+            return response()->json(['message' => 'Pinjaman sudah diproses sebelumnya'], 400);
+        }
+
+        $pinjaman->update([
+            'status' => 'ditolak',
+        ]);
+
+        return response()->json(['message' => 'Pengajuan pinjaman telah ditolak']);
     }
 }
