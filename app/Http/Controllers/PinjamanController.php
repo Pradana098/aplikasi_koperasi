@@ -30,51 +30,71 @@ class PinjamanController extends Controller
     }
 
     // Pengurus menyetujui pinjaman dan menentukan tenor + bunga (tanpa cicilan otomatis)
-    public function setujuiPinjaman(Request $request, $id)
-    {
-        $request->validate([
-            'tenor' => 'required|integer|min:1',
-            'bunga' => 'required|numeric|min:0',
+   public function setujuiPinjaman(Request $request, $id)
+{
+    $request->validate([
+        'tenor' => 'required|integer|min:1',
+        'bunga' => 'required|numeric|min:0',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // Cari pinjaman berdasarkan ID
+        $pinjaman = Pinjaman::find($id);
+
+        // Jika tidak ditemukan, kembalikan respons error
+        if (!$pinjaman) {
+            return response()->json([
+                'message' => 'Pinjaman tidak ditemukan',
+                'id_yang_dicari' => $id
+            ], 404);
+        }
+
+        // Cek status pinjaman
+        if ($pinjaman->status !== 'menunggu') {
+            return response()->json(['message' => 'Pinjaman sudah diproses sebelumnya'], 400);
+        }
+
+        // Update data pinjaman
+        $pinjaman->update([
+            'tenor' => $request->tenor,
+            'bunga' => $request->bunga,
+            'status' => 'disetujui',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $pinjaman = Pinjaman::findOrFail($id);
-
-            if ($pinjaman->status !== 'menunggu') {
-                return response()->json(['message' => 'Pinjaman sudah diproses sebelumnya'], 400);
-            }
-
-            $pinjaman->update([
-                'tenor' => $request->tenor,
-                'bunga' => $request->bunga,
-                'status' => 'disetujui',
-            ]);
-
-            // Transfer saldo ke anggota
-            $user = User::find($pinjaman->user_id);
+        // Tambahkan saldo ke user
+        $user = User::find($pinjaman->user_id);
+        if ($user) {
             $user->saldo += $pinjaman->jumlah_pinjaman;
             $user->save();
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Pinjaman disetujui. Silakan buat cicilan manual sesuai kebutuhan.'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['message' => 'Gagal menyetujui pinjaman', 'error' => $e->getMessage()], 500);
         }
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Pinjaman disetujui. Silakan buat cicilan manual sesuai kebutuhan.',
+            'pinjaman_id' => $pinjaman->id
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Gagal menyetujui pinjaman',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     // Pengurus membuat cicilan manual untuk pinjaman (bisa batch atau satu per satu)
     public function tambahCicilanManual(Request $request, $pinjaman_id)
     {
         $request->validate([
             'cicilan' => 'required|array|min:1',
-            'cicilan.*.bulan_ke' => 'required|integer|min:1',
             'cicilan.*.tanggal_jatuh_tempo' => 'required|date|after_or_equal:today',
-            'cicilan.*.jumlah_cicilan' => 'required|numeric|min:1000',
+            'cicilan*.bulan_ke' => 'required|integer|min:1',
+            'cicilan..*.jumlah_cicilan' => 'required|numeric|min:1000',
         ]);
 
         $pinjaman = Pinjaman::findOrFail($pinjaman_id);
@@ -103,8 +123,11 @@ class PinjamanController extends Controller
     // Menampilkan semua pinjaman (admin/pengurus)
     public function daftarPengajuan()
     {
-        $pinjaman = Pinjaman::with('user')->latest()->get();
-        return response()->json($pinjaman);
+         $data = Pinjaman::with('user')
+        ->where('status', 'menunggu')
+        ->get();
+
+    return response()->json(['data' => $data]);
     }
 
     // Detail pinjaman & cicilan

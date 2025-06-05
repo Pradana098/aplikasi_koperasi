@@ -12,13 +12,13 @@ use App\Exports\AnggotaExport;
 class AnggotaManajemenController extends Controller
 {
     // PENGURUS: Menampilkan semua anggota
- public function index()
-{
-    $anggota = User::where('role', 'anggota')
-                   ->select('id', 'nama', 'no_telepon', 'nip', 'unit_kerja', 'status')
-                   ->get();
-    return response()->json($anggota);
-}
+    public function index()
+    {
+        $anggota = User::where('role', 'anggota')
+            ->select('id', 'nama', 'no_telepon', 'nip', 'tempat_lahir', 'tanggal_lahir', 'alamat_rumah', 'unit_kerja', 'sk_perjanjian_kerja', 'status')
+            ->get();
+        return response()->json($anggota);
+    }
 
     // PENGURUS: Tambah anggota
     public function store(Request $request)
