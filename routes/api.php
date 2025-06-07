@@ -11,6 +11,7 @@ use App\Http\Controllers\SimpananController;
 use App\Http\Controllers\LaporanSimpananController;
 use App\Http\Controllers\PinjamanController;
 use App\Http\Controllers\API\Auth\ForgotPasswordController;
+use App\Http\Controllers\TransaksiController;
 
 // 🔐 Auth Routes (Tanpa Middleware)
 Route::post('/login', [AuthController::class, 'login']);
@@ -58,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pinjaman/{id}/setujui-dengan-cicilan', [PinjamanController::class, 'setujuiPinjamanSekaligusCicilan']);
         Route::post('/pinjaman/{id}/tolak', [PinjamanController::class, 'tolakPinjaman']);
         Route::post('/pinjaman/{id}/transfer', [PinjamanController::class, 'transferSaldo']);
-        //Route::post('/pinjaman/{id}/cicilan/manual', [PinjamanController::class, 'tambahCicilanManual']);
+        Route::post('/pinjaman/{id}/cicilan/manual', [PinjamanController::class, 'tambahCicilanManual']);
 
         // Manajemen Anggota
         Route::get('/pengurus/anggota', [AnggotaManajemenController::class, 'index']);
@@ -82,6 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Pinjaman Anggota
         Route::post('/pinjaman/ajukan', [PinjamanController::class, 'ajukanPinjaman']);
         Route::get('/pinjaman/saya', [PinjamanController::class, 'pinjamanSaya']);
+
+        // Riwayat Transaksi Anggota
+        Route::get('/transaksi', [TransaksiController::class, 'transaksi']);
+        Route::post('/transaksi', [TransaksiController::class, 'store']);
     });
 
     // ======================

@@ -7,6 +7,7 @@ use App\Models\Pinjaman;
 use App\Models\Cicilan;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PinjamanController extends Controller
 {
@@ -14,7 +15,7 @@ class PinjamanController extends Controller
     public function ajukanPinjaman(Request $request)
     {
         $request->validate([
-            'jumlah_pinjaman' => 'required|numeric', // Tanpa batasan minimum
+            'jumlah_pinjaman' => 'required|numeric',
             'tanggal_pengajuan' => 'required|date',
         ]);
 
@@ -28,16 +29,13 @@ class PinjamanController extends Controller
         return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim', 'data' => $pinjaman]);
     }
 
-    // Pengurus menyetujui pinjaman dan langsung menambahkan cicilan
-    public function setujuiPinjamanSekaligusCicilan(Request $request, $id)
+    // Pengurus menyetujui pinjaman dan generate cicilan otomatis
+    public function setujuiPinjamanDenganGenerateCicilan(Request $request, $id)
     {
         $request->validate([
             'tenor' => 'required|integer|min:1',
             'bunga' => 'required|numeric|min:0',
-            'cicilan' => 'required|array|min:1',
-            'cicilan.*.bulan_ke' => 'required|integer|min:1',
-            'cicilan.*.tanggal_jatuh_tempo' => 'required|date|after_or_equal:today',
-            'cicilan.*.jumlah_cicilan' => 'required|numeric|min:1000',
+            'jumlah_cicilan_per_bulan' => 'required|numeric|min:1000',
         ]);
 
         DB::beginTransaction();
@@ -63,13 +61,13 @@ class PinjamanController extends Controller
                 $user->save();
             }
 
-            // Simpan cicilan
-            foreach ($request->cicilan as $data) {
+            // Generate cicilan otomatis per bulan
+            for ($i = 1; $i <= $request->tenor; $i++) {
                 Cicilan::create([
                     'pinjaman_id' => $pinjaman->id,
-                    'bulan_ke' => $data['bulan_ke'],
-                    'tanggal_jatuh_tempo' => $data['tanggal_jatuh_tempo'],
-                    'jumlah_cicilan' => $data['jumlah_cicilan'],
+                    'bulan_ke' => $i,
+                    'tanggal_jatuh_tempo' => Carbon::now()->addMonths($i)->toDateString(),
+                    'jumlah_cicilan' => $request->jumlah_cicilan_per_bulan,
                     'status' => 'belum_lunas',
                 ]);
             }
@@ -77,10 +75,9 @@ class PinjamanController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Pinjaman disetujui dan cicilan berhasil ditambahkan.',
+                'message' => 'Pinjaman disetujui dan cicilan otomatis berhasil dibuat.',
                 'pinjaman_id' => $pinjaman->id,
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -90,7 +87,6 @@ class PinjamanController extends Controller
         }
     }
 
-    // Menampilkan semua pinjaman yang menunggu disetujui
     public function daftarPengajuan()
     {
         $data = Pinjaman::with('user')
@@ -100,14 +96,12 @@ class PinjamanController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    // Detail pinjaman & cicilan
     public function detailPinjaman($id)
     {
         $pinjaman = Pinjaman::with(['user', 'cicilan'])->findOrFail($id);
         return response()->json($pinjaman);
     }
 
-    // Anggota melihat daftar pinjaman miliknya
     public function pinjamanSaya()
     {
         $pinjaman = Pinjaman::where('user_id', auth()->id())
@@ -117,7 +111,6 @@ class PinjamanController extends Controller
         return response()->json($pinjaman);
     }
 
-    // Tolak pinjaman
     public function tolakPinjaman($id)
     {
         $pinjaman = Pinjaman::findOrFail($id);
