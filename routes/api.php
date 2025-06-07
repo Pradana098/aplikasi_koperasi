@@ -55,10 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Pinjaman
         Route::get('/pinjaman/pengajuan', [PinjamanController::class, 'daftarPengajuan']);
         Route::get('/pinjaman/{id}/detail', [PinjamanController::class, 'detailPinjaman']);
-        Route::post('/pinjaman/{id}/setujui', [PinjamanController::class, 'setujuiPinjaman']);
+        Route::post('/pinjaman/{id}/setujui-dengan-cicilan', [PinjamanController::class, 'setujuiPinjamanSekaligusCicilan']);
         Route::post('/pinjaman/{id}/tolak', [PinjamanController::class, 'tolakPinjaman']);
         Route::post('/pinjaman/{id}/transfer', [PinjamanController::class, 'transferSaldo']);
-        Route::post('/pinjaman/{id}/cicilan/manual', [PinjamanController::class, 'tambahCicilanManual']);
+        //Route::post('/pinjaman/{id}/cicilan/manual', [PinjamanController::class, 'tambahCicilanManual']);
 
         // Manajemen Anggota
         Route::get('/pengurus/anggota', [AnggotaManajemenController::class, 'index']);
